@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    // Output
+    "outDir": "./dist",
+
+    // Input roots
+    "rootDir": "..", // allow both ./src and ../types
+
+    // Module system
+    "target": "es2020",
+    "module": "nodenext",
+    "lib": ["es2020"],
+
+    // Strictness
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Path aliases (so you can import shared types cleanly)
+    "baseUrl": ".",
+    "paths": {
+      "@types/*": ["../types/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "../types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
