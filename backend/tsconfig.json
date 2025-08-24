@@ -9,6 +9,7 @@
     // Module system
     "target": "es2020",
     "module": "nodenext",
+    "moduleResolution": "nodenext",
     "lib": ["es2020"],
 
     // Strictness

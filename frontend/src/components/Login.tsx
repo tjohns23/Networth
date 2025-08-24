@@ -76,6 +76,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setError('');
 
     try {
+        // console.log('Sending auth/register request...')
       const response = await fetch('/auth/register', {
         method: 'POST',
         headers: {
@@ -84,8 +85,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         body: JSON.stringify(registerData),
       });
 
+      console.log('Getting response...');
       const data = await response.json();
+      console.log('Got response');
 
+      console.log('Checking response...');
       if (response.ok) {
         // Store token in localStorage
         localStorage.setItem('token', data.token);
@@ -94,6 +98,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         // Call success callback
         onLoginSuccess(data.token, data.user);
       } else {
+        console.log('Response not ok');
         setError(data.message || 'Registration failed');
       }
     } catch (error) {

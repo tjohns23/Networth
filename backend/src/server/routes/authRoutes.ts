@@ -3,6 +3,10 @@ import type { Request, Response } from 'express';
 import User from '../models/user.js';
 import { generateToken } from '../middleware/auth.js';
 
+// ADD THIS LINE
+console.log('✅ routes/authRoutes.js file has been loaded and is being executed.');
+
+
 const router = express.Router();
 
 // Request body interfaces
@@ -34,9 +38,10 @@ interface ErrorResponse {
 
 // POST /auth/register - Create new user account
 router.post('/register', async (req: Request<{}, AuthResponse | ErrorResponse, RegisterRequestBody>, res: Response<AuthResponse | ErrorResponse>) => {
+  // console.log('Inside register route');
   try {
     const { email, password, name } = req.body;
-
+ 
     // Basic validation
     const errors: string[] = [];
     if (!email) errors.push('Email is required');
@@ -76,7 +81,7 @@ router.post('/register', async (req: Request<{}, AuthResponse | ErrorResponse, R
     });
 
     // Return user data (without password) and token
-    res.status(201).json({
+    return res.status(201).json({
       token,
       user: {
         id: user._id.toString(),
@@ -94,7 +99,7 @@ router.post('/register', async (req: Request<{}, AuthResponse | ErrorResponse, R
       return res.status(400).json({ message: 'Validation failed', errors: validationErrors });
     }
 
-    res.status(500).json({ message: 'Error creating user account' });
+    return res.status(500).json({ message: 'Error creating user account' });
   }
 });
 
@@ -127,7 +132,7 @@ router.post('/login', async (req: Request<{}, AuthResponse | ErrorResponse, Logi
     });
 
     // Return user data (without password) and token
-    res.json({
+    return res.json({
       token,
       user: {
         id: user._id.toString(),
@@ -138,7 +143,7 @@ router.post('/login', async (req: Request<{}, AuthResponse | ErrorResponse, Logi
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Error during login' });
+    return res.status(500).json({ message: 'Error during login' });
   }
 });
 
@@ -158,7 +163,7 @@ router.get('/me', authenticateUser, (req: Request, res: Response) => {
     return res.status(401).json({ message: 'User not authenticated' });
   }
 
-  res.json({
+  return res.json({
     user: req.user
   });
 });
