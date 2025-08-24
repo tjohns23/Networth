@@ -8,3 +8,4 @@ export interface IContact {
   numMeetings: number;
   lastMet: string | null;  // ISO string (backend) or date string (frontend form)
 }
+

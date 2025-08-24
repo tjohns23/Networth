@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import ContactCard from './components/ContactCard'
 import AddContactModal from './components/AddContactModal'
+import Login from './components/Login'
 
 interface Contact {
   _id?: string;
@@ -13,7 +14,19 @@ interface Contact {
   lastMet?: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
 function App() {
+    // Authentication state
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(null);
+
+    // Existing state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -21,19 +34,72 @@ function App() {
     const [error, setError] = useState<string | null>(null);
     const [activeSection, setActiveSection] = useState('contacts');
 
+    // Check for existing token on app load
     useEffect(() => {
-        if (activeSection === 'contacts') {
+        const savedToken = localStorage.getItem('token');
+        const savedUser = localStorage.getItem('user');
+        
+        if (savedToken && savedUser) {
+            setToken(savedToken);
+            setUser(JSON.parse(savedUser));
+            setIsAuthenticated(true);
+        } else {
+            setLoading(false); // Stop loading if no saved auth
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeSection === 'contacts' && isAuthenticated) {
             fetchContacts();
         }
-    }, [activeSection]);
+    }, [activeSection, isAuthenticated]);
+
+    // Authentication handlers
+    const handleLoginSuccess = (token: string, user: User) => {
+        setToken(token);
+        setUser(user);
+        setIsAuthenticated(true);
+        setLoading(false);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+        setIsAuthenticated(false);
+        setContacts([]); // Clear contacts on logout
+        setActiveSection('contacts'); // Reset to contacts view
+    };
+
+    // API helper function to include auth header
+    const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+        const authHeaders = {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+        };
+
+        return fetch(url, {
+            ...options,
+            headers: {
+                ...authHeaders,
+                ...options.headers,
+            },
+        });
+    };
 
     const fetchContacts = async () => {
         try {
             setLoading(true);
             setError(null);
-            const res = await fetch("/api/contacts");
+            const res = await fetchWithAuth("/api/contacts");
             
             if (!res.ok) {
+                if (res.status === 401) {
+                    // Token expired or invalid, logout user
+                    handleLogout();
+                    return;
+                }
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
             
@@ -49,13 +115,16 @@ function App() {
 
     const addContact = async (newContact: Contact) => {
         try {
-            const res = await fetch("/api/contacts", {
+            const res = await fetchWithAuth("/api/contacts", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(newContact)
             });
 
             if (!res.ok) {
+                if (res.status === 401) {
+                    handleLogout();
+                    return;
+                }
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
 
@@ -71,13 +140,16 @@ function App() {
     const editContact = async (updatedContact: Contact) => {
         try {
             const id = updatedContact._id;
-            const response = await fetch(`/api/contacts/${id}`, {
+            const response = await fetchWithAuth(`/api/contacts/${id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(updatedContact)
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
                 throw new Error(`HTTP error! status : ${response.status}`);
             }
 
@@ -92,11 +164,15 @@ function App() {
     const deleteContact = async (id: string) => {
         try {
             console.log('Deleting contact with id: ', id);
-            const response = await fetch(`/api/contacts/${id}`, { 
+            const response = await fetchWithAuth(`/api/contacts/${id}`, { 
                 method: "DELETE" 
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -213,6 +289,11 @@ function App() {
         }
     };
 
+    // Show login page if not authenticated
+    if (!isAuthenticated) {
+        return <Login onLoginSuccess={handleLoginSuccess} />;
+    }
+
     return (
         <div className="min-h-screen w-full bg-orange-50">
             {/* Navigation */}
@@ -227,25 +308,46 @@ function App() {
                         </h1>
                     </div>
                     
-                    <div className="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-xl p-1 border border-white/20">
-                        {[
-                            { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-                            { id: 'contacts', label: 'Contacts', icon: '👥' },
-                            { id: 'email-templates', label: 'Templates', icon: '📧' }
-                        ].map((item) => (
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-xl p-1 border border-white/20">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'contacts', label: 'Contacts', icon: '👥' },
+                                { id: 'email-templates', label: 'Templates', icon: '📧' }
+                            ].map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setActiveSection(item.id)}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                                        activeSection === item.id
+                                            ? 'bg-gradient-to-r from-orange-400 to-blue-400 text-white shadow-lg'
+                                            : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                                    }`}
+                                >
+                                    <span className="text-sm">{item.icon}</span>
+                                    <span className="text-sm">{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {/* User menu */}
+                        <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
+                            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-white font-medium text-sm">
+                                    {user?.name.charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                            <div className="text-sm">
+                                <div className="font-medium text-gray-800">{user?.name}</div>
+                            </div>
                             <button
-                                key={item.id}
-                                onClick={() => setActiveSection(item.id)}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
-                                    activeSection === item.id
-                                        ? 'bg-gradient-to-r from-orange-400 to-blue-400 text-white shadow-lg'
-                                        : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
-                                }`}
+                                onClick={handleLogout}
+                                className="ml-2 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Logout"
                             >
-                                <span className="text-sm">{item.icon}</span>
-                                <span className="text-sm">{item.label}</span>
+                                Logout
                             </button>
-                        ))}
+                        </div>
                     </div>
                 </div>
             </nav>
