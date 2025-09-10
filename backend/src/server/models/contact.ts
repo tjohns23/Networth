@@ -7,6 +7,7 @@ export interface IContact {
   name: string;
   role: string;
   email: string;
+  nextMeeting: string;
   numMeetings: number;
   lastMet?: Date;
 }
@@ -30,12 +31,13 @@ const contactSchema = new Schema<IContact>({
     type: Schema.Types.ObjectId, 
     ref: 'User', 
     required: true 
-  }, // Added userId field to the schema
+  },
   name: { type: String, required: true },
   role: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String },
+  nextMeeting: { type: String },
   numMeetings: { type: Number, default: 0 },
-  lastMet: { type: Date }
+  lastMet: { type: Date },
 }, { timestamps: true }); // Added timestamps for createdAt/updatedAt
 
 // 4. Create the model and export it with its type

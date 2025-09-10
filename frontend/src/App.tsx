@@ -3,6 +3,8 @@ import './App.css'
 import ContactCard from './components/ContactCard'
 import AddContactModal from './components/AddContactModal'
 import Login from './components/Login'
+import FrameworkModal from './components/FrameworkModal';
+import FrameworkCard from './components/FrameworkCard';
 
 interface Contact {
   _id?: string;
@@ -20,6 +22,22 @@ interface User {
   name: string;
 }
 
+interface FrameworkTopic {
+    letter: string;
+    topic: string;
+}
+
+interface Framework {
+    _id?: string;
+    title: string;
+    acronym: string;
+    topics: FrameworkTopic[];
+    color: string;
+    userId?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
 function App() {
     // Authentication state
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -33,6 +51,13 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeSection, setActiveSection] = useState('contacts');
+
+    // Frameworks
+    const [frameworks, setFrameworks] = useState<Framework[]>([])
+    const [isFrameworkModalOpen, setIsFrameworkModalOpen] = useState(false);
+    const [editingFramework, setIsEditingFramework] = useState<Framework | null>(null);
+    const [frameworkError, setFrameworkError] = useState("");
+    const [frameworksLoading, setFrameworksLoading] = useState(true);
 
     // Check for existing token on app load
     useEffect(() => {
@@ -51,6 +76,7 @@ function App() {
     useEffect(() => {
         if (activeSection === 'contacts' && isAuthenticated) {
             fetchContacts();
+            fetchFrameworks();
         }
     }, [activeSection, isAuthenticated]);
 
@@ -88,6 +114,7 @@ function App() {
         });
     };
 
+    // Contacts
     const fetchContacts = async () => {
         try {
             setLoading(true);
@@ -184,6 +211,118 @@ function App() {
         }
     };
 
+
+    // Frameworks
+    const fetchFrameworks = async () => {
+        try {
+            setFrameworksLoading(true);
+            setFrameworkError("");
+
+            const res = await fetchWithAuth("/api/frameworks", {
+                method: "GET"
+            });
+
+            if (!res.ok) {
+                if (res.status === 401) {
+                    handleLogout();
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const data = await res.json();
+            setFrameworks(data);
+        } catch (error) {
+            console.error("Error fetching frameworks: ", error);
+            setFrameworkError("Failed to load frameworks");
+        } finally {
+            setFrameworksLoading(false);
+        }
+    };
+
+    const addFrameworks = async (newFramework: Framework) => {
+        try {
+            setFrameworkError("");
+
+            const res = await fetchWithAuth("/api/frameworks", {
+                method: "POST",
+                body: JSON.stringify(newFramework)
+            });
+
+            if (!res.ok) {
+                if (res.status === 401) {
+                    handleLogout();
+                    return
+                }
+                throw new Error (`HTTP error! status: ${res.status}`)
+            }
+
+            await fetchFrameworks();
+            setIsFrameworkModalOpen(false);
+
+            console.log("Framework added successfully!")
+        } catch (error) {
+            console.error("Error adding framework: ", error);
+            setFrameworkError("Failed to add framework");
+        }
+    };
+
+    const editFramework = async (updatedFramework: Framework) => {
+        try {
+            setFrameworkError("");
+
+            const id = updatedFramework._id;
+            // rememeber why we put id here again
+            console.log('Calling edit api route from frontend');
+            const response = await fetchWithAuth(`/api/frameworks/${id}`, {
+                method: "PUT",
+                body: JSON.stringify(updatedFramework)
+            });
+            console.log('Got response');
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            await fetchFrameworks();
+            setIsEditingFramework(null);
+
+            console.log("Framework updated successfully");
+        } catch (error) {
+            console.error("Error editing framework: ", error);
+            setFrameworkError("Failed to edit framework");
+        }
+    }
+
+    const deleteFramework = async (frameworkId: string) => {
+        try {
+            setFrameworkError("");
+
+            const response = await fetchWithAuth(`/api/frameworks/${frameworkId}`, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            await fetchFrameworks();
+
+            console.log("Framework deleted successfully");
+        } catch (error) {
+            console.error("Error deleting framework:", error);
+            setFrameworkError("Failed to delete framework");
+        }
+    }
+
     const renderDashboard = () => (
         <div className="text-center py-16">
             <div className="bg-gradient-to-br from-orange-50 to-blue-50 rounded-2xl p-12 max-w-md mx-auto">
@@ -197,18 +336,124 @@ function App() {
         </div>
     );
 
-    const renderEmailTemplates = () => (
-        <div className="text-center py-16">
-            <div className="bg-gradient-to-br from-blue-50 to-orange-50 rounded-2xl p-12 max-w-md mx-auto">
-                <div className="text-6xl mb-4">📧</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Email Templates</h2>
-                <p className="text-gray-600">Template management coming soon...</p>
-                <div className="mt-6 h-2 bg-gradient-to-r from-blue-200 to-orange-200 rounded-full">
-                    <div className="h-2 bg-gradient-to-r from-blue-400 to-orange-400 rounded-full w-2/3 animate-pulse"></div>
+    const renderFrameworkTemplates = () => {
+        console.log('Framework data: ', frameworks)
+        const handleEditFramework = (framework: Framework) => {
+            setIsEditingFramework(framework);
+            setIsFrameworkModalOpen(true);
+        };
+
+        return (
+            <div className="flex gap-6 p-6 min-h-screen">
+                {/* Main content area - Framework cards */}
+                <div className="flex-1">
+                    <div className="mb-8">
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                            Coffee Chat Frameworks
+                        </h2>
+                        <p className="text-gray-600">Structured conversation starters for meaningful discussions</p>
+                    </div>
+
+                    {/* Error handling */}
+                    {frameworkError && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <p className="text-red-700">{frameworkError}</p>
+                        </div>
+                    )}
+
+                    {/* Loading state */}
+                    {frameworksLoading ? (
+                        <div className="text-center py-16">
+                            <div className="bg-gradient-to-br from-blue-50 to-orange-50 rounded-2xl p-12 max-w-md mx-auto">
+                                <div className="text-4xl mb-4">⚡</div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Loading Frameworks...</h3>
+                                <div className="mt-4 h-2 bg-gradient-to-r from-blue-200 to-orange-200 rounded-full">
+                                    <div className="h-2 bg-gradient-to-r from-blue-400 to-orange-400 rounded-full w-2/3 animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : frameworks.length === 0 ? (
+                        /* Empty state */
+                        <div className="text-center py-16">
+                            <div className="bg-gradient-to-br from-blue-50 to-orange-50 rounded-2xl p-12 max-w-md mx-auto">
+                                <div className="text-6xl mb-4">💡</div>
+                                <h3 className="text-2xl font-bold text-gray-800 mb-4">No Frameworks Yet</h3>
+                                <p className="text-gray-600 mb-6">Create your first coffee chat framework to get started!</p>
+                                <button 
+                                    onClick={() => setIsFrameworkModalOpen(true)}
+                                    className="bg-gradient-to-r from-orange-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-blue-600 transition-all duration-300 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+                                >
+                                    Create Your First Framework
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        /* Framework cards grid */
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                {frameworks.map((framework) => (
+                                    <FrameworkCard
+                                        key={framework._id}
+                                        framework={framework}
+                                        onEdit={handleEditFramework}
+                                        onDelete={deleteFramework}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Add New Framework Button */}
+                            <div className="text-center">
+                                <button 
+                                    onClick={() => setIsFrameworkModalOpen(true)}
+                                    className="bg-gradient-to-r from-orange-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-blue-600 transition-all duration-300 hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+                                >
+                                    + Create New Framework
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Right sidebar - Upcoming meetings placeholder */}
+                <div className="w-80 flex-shrink-0">
+                    <div className="bg-white/80 backdrop-blur-sm border border-white/30 shadow-lg rounded-2xl p-6 sticky top-6">
+                        <div className="text-center mb-6">
+                            <h3 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                                Upcoming Meetings
+                            </h3>
+                            <div className="h-1 w-12 bg-gradient-to-r from-orange-400 to-blue-400 rounded-full mx-auto"></div>
+                        </div>
+
+                        {/* Placeholder content */}
+                        <div className="space-y-4">
+                            <div className="text-center py-8">
+                                <div className="text-4xl mb-3">📅</div>
+                                <p className="text-gray-500 text-sm">Meeting integration coming soon...</p>
+                            </div>
+                            
+                            {/* Example upcoming meeting items */}
+                            <div className="space-y-3 opacity-30">
+                                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-orange-50 rounded-lg">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-700">Coffee with Sarah</p>
+                                        <p className="text-xs text-gray-500">Tomorrow, 2:00 PM</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-blue-50 rounded-lg">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-700">Team Sync</p>
+                                        <p className="text-xs text-gray-500">Friday, 10:00 AM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const renderContacts = () => {
         if (loading) {
@@ -281,8 +526,8 @@ function App() {
         switch (activeSection) {
             case 'dashboard':
                 return renderDashboard();
-            case 'email-templates':
-                return renderEmailTemplates();
+            case 'framework-templates':
+                return renderFrameworkTemplates();
             case 'contacts':
             default:
                 return renderContacts();
@@ -312,8 +557,9 @@ function App() {
                         <div className="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-xl p-1 border border-white/20">
                             {[
                                 { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                { id: 'resume-cover-suite', label: 'Resume & Cover Letters', icon: '📁' },
                                 { id: 'contacts', label: 'Contacts', icon: '👥' },
-                                { id: 'email-templates', label: 'Templates', icon: '📧' }
+                                { id: 'framework-templates', label: 'Frameworks', icon: '🏗️' }
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -369,6 +615,16 @@ function App() {
                 onAdd={addContact}
                 onEdit={editContact}
                 editingContact={editingContact}
+            />
+            <FrameworkModal
+                isOpen={isFrameworkModalOpen}
+                onClose={() => {
+                    setIsFrameworkModalOpen(false);
+                    setIsEditingFramework(null);
+                }}
+                onSubmit={editingFramework ? editFramework : addFrameworks}
+                editingFramework={editingFramework}
+                error={frameworkError}
             />
         </div>
     );

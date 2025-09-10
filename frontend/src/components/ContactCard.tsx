@@ -6,8 +6,9 @@ interface Contact {
   name: string;
   role: string;
   email: string;
-  numMeetings: number;
-  lastMet?: string;
+  numMeetings: number; // REMOVE 
+  lastMet?: string; // REMOVE
+  nextMeeting?: string;
 }
 
 interface ContactCardProps {
@@ -18,7 +19,7 @@ interface ContactCardProps {
 
 
 export default function ContactCard({ contact, onDelete, onEdit } : ContactCardProps) {
-  const { _id, company, name, role, email, numMeetings, lastMet } = contact;
+  const { _id, company, name, role, email, numMeetings, lastMet, nextMeeting } = contact;
 
   return (
     <div className="bg-white/80 backdrop-blur-sm border border-white/30 shadow-lg hover:shadow-xl rounded-2xl p-6 w-full text-left transition-all duration-300 hover:-translate-y-1 group">
@@ -74,25 +75,13 @@ export default function ContactCard({ contact, onDelete, onEdit } : ContactCardP
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className=" pt-3 border-t border-gray-100">
           <div className="text-center">
             <div className="text-lg font-bold bg-gradient-to-r from-orange-500 to-blue-500 bg-clip-text text-transparent">
-              {numMeetings || 0}
+              {/* {numMeetings || 0} */}
+              { nextMeeting || 'None' }
             </div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Meetings</div>
-          </div>
-          
-          <div className="h-8 w-px bg-gray-200"></div>
-          
-          <div className="text-center flex-1 ml-4">
-            <div className="text-sm font-medium text-gray-700">
-              {lastMet ? new Date(lastMet).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: 'numeric'
-              }) : 'Never'}
-            </div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Last Met</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Upcoming Meeting</div>
           </div>
         </div>
       </div>

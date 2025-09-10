@@ -6,6 +6,7 @@ interface Contact {
     name: string;
     role: string;
     email: string;
+    nextMeeting?: string;
     numMeetings: number;
     lastMet?: string;
 }
@@ -23,6 +24,7 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
     const [name, setName] = useState('');
     const [role, setRole] = useState('');
     const [email, setEmail] = useState('');
+    const [nextMeeting, setNextMeeting] = useState('');
     const [numMeetings, setNumMeetings] = useState(0);
     const [lastMet, setLastMet] = useState('');
 
@@ -34,7 +36,7 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
                 setName(editingContact.name || '');
                 setRole(editingContact.role || '');
                 setEmail(editingContact.email || '');
-                // Fix: Remove duplicate condition
+                setNextMeeting(editingContact.nextMeeting || '');
                 const meetings = editingContact.numMeetings || 0;
                 console.log('Setting numMeetings to:', meetings); // Debug log
                 setNumMeetings(meetings);
@@ -46,6 +48,7 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
                 setName('');
                 setRole('');
                 setEmail('');
+                setNextMeeting('');
                 setNumMeetings(0);
                 setLastMet('');
             }
@@ -56,8 +59,8 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!name.trim() || !email.trim()) {
-            alert('Please provide a name and an email');
+        if (!name.trim()) {
+            alert('Please provide a name');
             return;
         }
 
@@ -66,6 +69,7 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
             name: name.trim(),
             role: role.trim() || '-',
             email: email.trim() || '-',
+            nextMeeting: nextMeeting || 'None',
             numMeetings: numMeetings,
             lastMet: lastMet || undefined,
         };
@@ -112,7 +116,7 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
                     </label>
 
                     <label className="text-sm">
-                        Role
+                        Role *
                         <input
                             value={role}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRole(e.target.value)}
@@ -121,50 +125,26 @@ export default function AddContactModal({ isOpen, onClose, onAdd, onEdit, editin
                     </label>
 
                     <label className="text-sm">
-                        Email *
+                        Email
                         <input
                             type="email"
                             value={email}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                            required
+                            // required
                             className="w-full mt-1 p-2 border rounded-md"
                         />
                     </label>
 
-                    <div className="flex gap-3">
-                        <label className="text-sm flex-1">
-                            Meetings
-                            <input
-                                type="number"
-                                min="0"
-                                value={numMeetings}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    const value = e.target.value;
-                                    // Allow empty string (for backspacing) or valid numbers
-                                    if (value === '') {
-                                        setNumMeetings(0);
-                                    } else {
-                                        setNumMeetings(parseInt(value, 10) || 0);
-                                    }
-                                }}
-                                onBlur={(e) => {
-                                    // Convert empty string to 0 when user leaves the field
-                                    if (e.target.value === '') {
-                                        setNumMeetings(0);
-                                    }
-                                }}
-                                className="w-full mt-1 p-2 border rounded-md"
+                    <div className="gap-3">
+                        <label className="text-sm">
+                            Upcoming Meeting
+                            <input 
+                            type="date"
+                            value={nextMeeting}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNextMeeting(e.target.value)}
+                            className="w-full mt-1 p-2 border rounded-md"
                             />
-                        </label>
 
-                        <label className="text-sm flex-1">
-                            Last Met
-                            <input
-                                type="date"
-                                value={lastMet}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLastMet(e.target.value)}
-                                className="w-full mt-1 p-2 border rounded-md"
-                            />
                         </label>
                     </div>
                 </div>

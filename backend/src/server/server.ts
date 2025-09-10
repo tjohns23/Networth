@@ -9,6 +9,7 @@ import cors from 'cors';
 // 3. Application-Specific Imports
 import contactRoutes from "./routes/contactRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import frameworkRoutes from "./routes/frameworkRoutes.js";
 import connectDB from './config/db.js';
 
 // --- Main Application Logic ---
@@ -34,6 +35,8 @@ const startServer = async () => {
     app.use("/api/contacts", contactRoutes);
     // All routes for '/auth' will be handled by the authRoutes router
     app.use('/auth', authRoutes);
+    // All routes with '/framework will be handled by the frameworkRoutes router
+    app.use('/api/frameworks', frameworkRoutes);
 
     // 8. Define Port and Start Server
     const PORT = process.env.PORT || 5000;
@@ -43,7 +46,7 @@ const startServer = async () => {
     });
 
   } catch (error) {
-    console.error("❌ Failed to start the server.");
+    console.error("Failed to start the server.");
     console.error(error);
     // Exit the process with a failure code if we can't start up
     process.exit(1);
