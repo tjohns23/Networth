@@ -43,3 +43,55 @@ You need the following installed on your machine:
 ```bash
 git clone https://github.com/your-username/your-repository-name.git
 cd your-repository-name
+
+
+---
+### 2. Install Backend Dependencies
+```bash
+cd backend
+npm install
+
+---
+### 3. Configure Backend Environment Variables
+```bash
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_super_secret_random_string
+JWT_EXPIRES_IN=7d
+
+
+---
+### 4. Install Frontend Dependencies
+```bash
+cd ../frontend
+npm install
+
+
+---
+## ▶️ Running the Application
+
+You'll need two terminal windows: one for the backend and one for the frontend.
+
+### Terminal 1: Run the backend
+```bash
+cd backend
+npm run dev
+
+The backend server will be running at http://localhost:5000
+
+---
+
+
+### Terminal 2: Run the frontend
+```bash
+cd frontend
+npm run dev
+
+The frontend React app will be running at http://localhost:5173
+
+
+
+
+
+
+
