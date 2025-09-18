@@ -1,7 +1,7 @@
-# Networth - Contact Management System
+# Networth - Job Application Management System
 
-A full-stack web application designed to help users manage their personal and professional contacts.  
-This application provides a **secure, robust, and user-friendly interface** for creating, viewing, updating, and deleting contact information.
+A full-stack web application designed to help users manage job applications.  
+This application provides a **secure, robust, and user-friendly interface** for tracking application status, storing and editing resumes, and preparing for coffee chats.
 
 Built with the **MERN stack** (MongoDB, Express.js, React, Node.js) and written entirely in **TypeScript**.
 
@@ -11,14 +11,8 @@ Built with the **MERN stack** (MongoDB, Express.js, React, Node.js) and written 
 - **Secure User Authentication**  
   Users can create an account and log in securely. The system uses **JSON Web Tokens (JWT)** for session management, ensuring that user data is protected.
 
-- **Full CRUD Functionality**  
-  Authenticated users can **Create, Read, Update, Delete** contacts.
-
 - **RESTful API**  
-  A well-structured backend API built with **Express.js** and **Mongoose** for interacting with the MongoDB database.
-
-- **Responsive Frontend**  
-  A clean and intuitive **React interface** that works seamlessly on desktop and mobile devices.
+  A structured backend API built with **Express.js** and **Mongoose** for interacting with the MongoDB database.
 
 - **Environment-Based Configuration**  
   Sensitive information like database connection strings and JWT secrets are managed using environment variables.
@@ -80,9 +74,8 @@ You'll need two terminal windows: one for the backend and one for the frontend.
 ```bash
 cd backend
 npm run dev
-
-The backend server will be running at http://localhost:5000
 ```
+The backend server will be running at http://localhost:5000
 
 ---
 
