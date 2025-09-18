@@ -43,6 +43,7 @@ You need the following installed on your machine:
 ```bash
 git clone https://github.com/your-username/your-repository-name.git
 cd your-repository-name
+```
 
 
 ---
@@ -50,6 +51,7 @@ cd your-repository-name
 ```bash
 cd backend
 npm install
+```
 
 ---
 ### 3. Configure Backend Environment Variables
@@ -58,6 +60,7 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_super_secret_random_string
 JWT_EXPIRES_IN=7d
+```
 
 
 ---
@@ -65,6 +68,7 @@ JWT_EXPIRES_IN=7d
 ```bash
 cd ../frontend
 npm install
+```
 
 
 ---
@@ -78,6 +82,7 @@ cd backend
 npm run dev
 
 The backend server will be running at http://localhost:5000
+```
 
 ---
 
@@ -86,6 +91,7 @@ The backend server will be running at http://localhost:5000
 ```bash
 cd frontend
 npm run dev
+```
 
 The frontend React app will be running at http://localhost:5173
 
